@@ -2,6 +2,7 @@ package com.fmsac.cotizadormodasa.data.network
 
 import com.fmsac.cotizadormodasa.data.network.request.auth.AuthRequest
 import com.fmsac.cotizadormodasa.data.network.request.generator_sets.GeneratingSetsParametersRequest
+import com.fmsac.cotizadormodasa.data.network.request.generator_sets.change_configuration.ChangeConfigurationRequest
 import com.fmsac.cotizadormodasa.data.network.request.quote.CreateQuoteGeneratorSetRequest
 import com.fmsac.cotizadormodasa.data.network.responses.Response
 import com.fmsac.cotizadormodasa.data.network.responses.comercial_condition.CommercialConditionResponse
@@ -12,6 +13,7 @@ import com.fmsac.cotizadormodasa.data.network.responses.generating_sets_paramete
 import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.AlternatorExtendedResponse
 import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.GeneratorSetModelResponse
 import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.GeneratorSetV2WrapperResponse
+import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.change_configuration.ChangeConfigurationResponse
 import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.ITMExtendedResponse
 import com.fmsac.cotizadormodasa.data.network.responses.incoterm.IncotermResponse
 import com.fmsac.cotizadormodasa.data.network.responses.quote.AllQuoteResponse
@@ -22,7 +24,6 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
-
 
 interface ApiService {
 
@@ -77,6 +78,12 @@ interface ApiService {
     suspend fun getITMsByCombination(
         @Path("integradoraId") integradoraId: Int
     ): Response<List<ITMExtendedResponse>>
+
+    // Endpoint para recalcular precios con nueva configuración de componentes
+    @POST("/api/v2/generator-sets/change-configuration")
+    suspend fun changeConfiguration(
+        @Body request: ChangeConfigurationRequest
+    ): Response<ChangeConfigurationResponse>
 
     @GET("/api/v1/opcionales")
     suspend fun getAllOptionalComponents(): Response<List<OptionalComponentResponse>>

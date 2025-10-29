@@ -9,6 +9,9 @@ import com.fmsac.cotizadormodasa.data.mappers.generator_sets.GeneratingSetsParam
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.GeneratingSetsParametersMapper
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.GeneratorSetModelMapper
 import com.fmsac.cotizadormodasa.data.network.ApiService
+import com.fmsac.cotizadormodasa.data.network.request.generator_sets.change_configuration.ChangeConfigurationRequest
+import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.change_configuration.ChangeConfigurationResponse
+import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.GeneratorSetV2CombinationResponse
 
 class GeneratorSetModelsRepository(
     private val mapper: GeneratorSetModelMapper,
@@ -119,4 +122,89 @@ class GeneratorSetModelsRepository(
         // Agregar "Todos" al inicio de la lista
         return listOf("Todos") + response.data
     }
+
+    /**
+     * Recalcula el precio de una combinación con nueva configuración de componentes
+     * @param originalParams Parámetros de búsqueda originales
+     * @param integradoraId ID de la combinación actual
+     * @param currentAlternatorId ID del alternador actual (debe ser válido)
+     * @param currentItmId ID del ITM actual (debe ser válido)
+     * @param newAlternatorId ID del nuevo alternador (null si no cambia)
+     * @param newItmId ID del nuevo ITM (null si no cambia)
+     * @return Result con la combinación recalculada o error
+     */
+    suspend fun changeConfiguration(
+        originalParams: GeneratingSetsParameters,
+        integradoraId: Int,
+        currentAlternatorId: Int,
+        currentItmId: Int,
+        newAlternatorId: Int? = null,
+        newItmId: Int? = null
+    ): Result<GeneratorSetV2CombinationResponse> {
+        return try {
+            Log.d("GeneratorSetRepository", "=== START changeConfiguration ===")
+            Log.d("GeneratorSetRepository", "Recalculating for integradoraId: $integradoraId")
+            Log.d("GeneratorSetRepository", "Current alternatorId: $currentAlternatorId, current itmId: $currentItmId")
+            Log.d("GeneratorSetRepository", "New alternatorId: $newAlternatorId, new itmId: $newItmId")
+
+            // Validar parámetros requeridos
+            if (integradoraId <= 0) {
+                throw Exception("Integradora ID debe ser mayor que 0: $integradoraId")
+            }
+            if (currentAlternatorId <= 0 || currentItmId <= 0) {
+                throw Exception("IDs de componentes actuales deben ser válidos: alternatorId=$currentAlternatorId, itmId=$currentItmId")
+            }
+            if (newAlternatorId == null && newItmId == null) {
+                throw Exception("Debe especificarse al menos un componente nuevo (newAlternatorId o newItmId)")
+            }
+
+            // Para usar el endpoint existente, usamos los parámetros originales
+            // El backend debería aplicar los cambios automáticamente
+            val requestDTO = paramsMapper.toDTO(originalParams)
+            Log.d("GeneratorSetRepository", "Using existing endpoint with params: voltage=${requestDTO.voltage}, frequency=${requestDTO.frequency}, model=${requestDTO.modelo}")
+
+            // Crear configuración con AMBOS componentes (usar valores actuales para los que no cambian)
+            val configuration = com.fmsac.cotizadormodasa.data.network.request.generator_sets.change_configuration.NewConfiguration(
+                alternatorId = newAlternatorId ?: currentAlternatorId,
+                itmId = newItmId ?: currentItmId
+            )
+            
+            // Crear request en el ORDEN CORRECTO del JSON web
+            val changeConfigRequest = ChangeConfigurationRequest(
+                configuration = configuration,
+                integradoraId = integradoraId,
+                params = requestDTO
+            )
+            
+            Log.d("GeneratorSetRepository", "Request payload: integradoraId=${changeConfigRequest.integradoraId}, marketId=${changeConfigRequest.params.marketId}")
+            Log.d("GeneratorSetRepository", "JSON order: configuration, integradoraId, params")
+
+            // Llamar al endpoint real sin fallbacks
+            val response = api.changeConfiguration(changeConfigRequest)
+
+            Log.d("GeneratorSetRepository", "=== API RESPONSE RECEIVED ===")
+            Log.d("GeneratorSetRepository", "Response success: ${response.success}")
+            Log.d("GeneratorSetRepository", "Response message: ${response.message}")
+
+            if (!response.success) {
+                val errorMsg = response.message.ifEmpty { "Error al recalcular la configuración" }
+                Log.e("GeneratorSetRepository", "❌ API response success=false: $errorMsg")
+                throw Exception(errorMsg)
+            }
+
+            if (response.data == null || response.data.data == null || response.data.data.combination == null) {
+                Log.e("GeneratorSetRepository", "❌ API response data is null")
+                throw Exception("No se recibió datos de la combinación recalculada")
+            }
+
+            Log.d("GeneratorSetRepository", "=== SUCCESS: Combination recalculated ===")
+            Log.d("GeneratorSetRepository", "New combination: ${response.data.data.combination}")
+
+            Result.success(response.data.data.combination)
+        } catch (e: Exception) {
+            Log.e("GeneratorSetRepository", "❌ Error changing configuration: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
 }

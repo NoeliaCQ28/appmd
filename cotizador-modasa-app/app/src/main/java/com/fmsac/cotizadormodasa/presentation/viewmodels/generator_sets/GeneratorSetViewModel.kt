@@ -8,6 +8,7 @@ import com.fmsac.cotizadormodasa.core.generator_sets.GeneratingSetsParameters
 import com.fmsac.cotizadormodasa.core.generator_sets.GeneratorSetModel
 import com.fmsac.cotizadormodasa.core.generator_sets.GeneratorSetModelItem
 import com.fmsac.cotizadormodasa.core.generator_sets.GeneratorSetParametersAvailable
+import com.fmsac.cotizadormodasa.core.generator_sets.UpdatedCombinationResult
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.GeneratingSetsParameterValuesMapper
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.GeneratingSetsParametersMapper
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.GeneratorSetModelMapper
@@ -19,6 +20,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class GeneratorSetViewModel(application: Application) : AndroidViewModel(application) {
@@ -154,5 +157,62 @@ class GeneratorSetViewModel(application: Application) : AndroidViewModel(applica
                 )
             }
         }
+    }
+
+    // Estado para combinaciones actualizadas
+    private val _updatedCombinations = MutableStateFlow<List<UpdatedCombinationResult>>(emptyList())
+    val updatedCombinations = _updatedCombinations.asStateFlow()
+
+    // Flow para emitir eventos de cambio de combinación
+    private val _combinationUpdateEvents = MutableSharedFlow<UpdatedCombinationResult>()
+    val combinationUpdateEvents = _combinationUpdateEvents.asSharedFlow()
+
+    /**
+     * Actualiza una combinación específica en la lista local
+     */
+    fun updateCombinationInLocalList(updatedResult: UpdatedCombinationResult) {
+        val currentCombinations = _updatedCombinations.value.toMutableList()
+        
+        // Remover si ya existe
+        currentCombinations.removeAll { it.originalIntegradoraId == updatedResult.originalIntegradoraId }
+        
+        // Añadir la nueva combinación actualizada
+        currentCombinations.add(updatedResult)
+        
+        _updatedCombinations.value = currentCombinations
+        
+        Log.d("GeneratorSetViewModel", "Updated combination for integradoraId: ${updatedResult.originalIntegradoraId}")
+        
+        // Emitir evento para que los observers actualicen la UI
+        viewModelScope.launch {
+            _combinationUpdateEvents.emit(updatedResult)
+        }
+    }
+
+    /**
+     * Obtiene una combinación actualizada por su ID de integradora
+     */
+    fun getUpdatedCombinationByIntegradoraId(integradoraId: Int): UpdatedCombinationResult? {
+        return _updatedCombinations.value.find { it.originalIntegradoraId == integradoraId }
+    }
+
+    /**
+     * Obtiene el repositorio de modelos de grupos electrógenos
+     * Usado por otros ViewModels para acceder a la funcionalidad de changeConfiguration
+     */
+    fun getGeneratorSetRepository(): Deferred<GeneratorSetModelsRepository> {
+        return repository
+    }
+
+    /**
+     * Limpia todas las combinaciones actualizadas
+     */
+    fun clearUpdatedCombinations() {
+        _updatedCombinations.value = emptyList()
+        Log.d("GeneratorSetViewModel", "Cleared all updated combinations")
+    }
+
+    companion object {
+        private const val TAG = "GeneratorSetViewModel"
     }
 }

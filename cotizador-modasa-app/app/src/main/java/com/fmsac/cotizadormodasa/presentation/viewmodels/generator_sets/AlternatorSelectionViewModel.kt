@@ -5,9 +5,11 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fmsac.cotizadormodasa.core.generator_sets.AlternatorExtended
+import com.fmsac.cotizadormodasa.core.generator_sets.GeneratingSetsParameters
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.AlternatorExtendedMapper
 import com.fmsac.cotizadormodasa.data.network.ApiService
 import com.fmsac.cotizadormodasa.data.network.RetrofitInstance
+import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.GeneratorSetV2CombinationResponse
 import com.fmsac.cotizadormodasa.data.repositories.AlternatorExtendedRepository
 import com.fmsac.cotizadormodasa.presentation.state.FetchState
 import kotlinx.coroutines.Deferred
@@ -45,6 +47,12 @@ class AlternatorSelectionViewModel(application: Application) : AndroidViewModel(
         )
     }
 
+    // Referencias para obtener estado compartido con GeneratorSetViewModel
+    private var sharedGeneratorSetViewModel: GeneratorSetViewModel? = null
+    fun setSharedViewModel(viewModel: GeneratorSetViewModel) {
+        sharedGeneratorSetViewModel = viewModel
+    }
+
     // Estado de alternadores cargados
     private val _alternators = MutableStateFlow<List<AlternatorExtended>>(emptyList())
     val alternators: StateFlow<List<AlternatorExtended>> = _alternators.asStateFlow()
@@ -76,6 +84,66 @@ class AlternatorSelectionViewModel(application: Application) : AndroidViewModel(
     // ID del alternador seleccionado temporalmente en el modal
     private val _tempSelectedAlternatorId = MutableStateFlow<Int?>(null)
     val tempSelectedAlternatorId: StateFlow<Int?> = _tempSelectedAlternatorId.asStateFlow()
+
+    // Callback para notificar cambios en el precio
+    private var onPriceRecalculatedCallback: ((GeneratorSetV2CombinationResponse) -> Unit)? = null
+
+    fun setOnPriceRecalculatedCallback(callback: (GeneratorSetV2CombinationResponse) -> Unit) {
+        this.onPriceRecalculatedCallback = callback
+    }
+
+    /**
+     * Método público para disparar la recalculación de precio
+     * Usado por la UI a través del callback
+     */
+    fun recalculatePriceWithAlternator(
+        currentCombination: GeneratorSetV2CombinationResponse,
+        originalParams: GeneratingSetsParameters,
+        newAlternatorId: Int
+    ) {
+        viewModelScope.launch {
+            try {
+                val repository = sharedGeneratorSetViewModel?.getGeneratorSetRepository()?.await()
+                    ?: throw Exception("Repository no disponible")
+                
+                val result = repository.changeConfiguration(
+                    originalParams = originalParams,
+                    integradoraId = currentCombination.integradoraId,
+                    currentAlternatorId = currentCombination.alternatorId,
+                    currentItmId = currentCombination.itmId,
+                    newAlternatorId = newAlternatorId,
+                    newItmId = null
+                )
+                
+                result.fold(
+                    onSuccess = { updatedCombination ->
+                        // Llamar al callback con la combinación actualizada
+                        onPriceRecalculatedCallback?.invoke(updatedCombination)
+                        
+                        // Notificar al GeneratorSetViewModel de la actualización
+                        sharedGeneratorSetViewModel?.updateCombinationInLocalList(
+                            com.fmsac.cotizadormodasa.core.generator_sets.UpdatedCombinationResult(
+                                originalIntegradoraId = currentCombination.integradoraId,
+                                updatedCombination = updatedCombination,
+                                componentChanged = "alternator",
+                                oldAlternatorId = currentCombination.alternatorId,
+                                oldItmId = currentCombination.itmId,
+                                newAlternatorId = newAlternatorId,
+                                newItmId = currentCombination.itmId
+                            )
+                        )
+                        
+                        Log.d(TAG, "Price recalculated with new alternator: $newAlternatorId")
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Error recalculating price with alternator: ${error.message}", error)
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception recalculating price with alternator: ${e.message}", e)
+            }
+        }
+    }
 
     /**
      * Carga los alternadores disponibles para una integradora

@@ -69,7 +69,8 @@ import com.fmsac.cotizadormodasa.presentation.viewmodels.generator_sets.Alternat
 import com.fmsac.cotizadormodasa.presentation.viewmodels.generator_sets.GeneratorSetViewModel
 import com.fmsac.cotizadormodasa.presentation.viewmodels.generator_sets.ITMSelectionViewModel
 import com.fmsac.cotizadormodasa.presentation.viewmodels.generator_sets.OptionalGeneratorSetComponentsViewModel
-
+import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.GeneratorSetV2CombinationResponse
+import kotlinx.coroutines.launch
 @Composable
 fun GeneratorSetModelCard(
     modifier: Modifier = Modifier,
@@ -82,12 +83,7 @@ fun GeneratorSetModelCard(
     alternatorSelectionViewModel: AlternatorSelectionViewModel,
     itmSelectionViewModel: ITMSelectionViewModel
 ) {
-    // Validación defensiva: No renderizar si no hay alternators
-    if (model.alternators.isEmpty()) {
-        Log.w("GeneratorSetModelCard", "Model '${model.name}' has no alternators, skipping render")
-        return
-    }
-
+    // Declarar variables antes de usarlas en callbacks
     var alternatorSelected by rememberSaveable {
         mutableStateOf(model.alternators.first())
     }
@@ -109,7 +105,7 @@ fun GeneratorSetModelCard(
     var showITMModal by rememberSaveable { mutableStateOf(false) }
     var showAccessoriesModal by rememberSaveable { mutableStateOf(false) }
 
-    // External component selection (separate from model's default alternators)
+    // External component selection
     var externalAlternatorId by rememberSaveable { mutableIntStateOf(0) }
     var externalAlternatorName by rememberSaveable { mutableStateOf<String?>(null) }
     var externalAlternatorPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
@@ -119,6 +115,35 @@ fun GeneratorSetModelCard(
     var externalITMPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
 
     var selectedAccessoryIds by rememberSaveable { mutableStateOf<Set<Int>>(emptySet()) }
+
+    // Establecer referencia compartida con los ViewModels de selección
+    LaunchedEffect(Unit) {
+        alternatorSelectionViewModel.setSharedViewModel(generatorSetViewModel)
+        itmSelectionViewModel.setSharedViewModel(generatorSetViewModel)
+        
+        // Establecer callbacks para recibir resultados de recalculación
+        alternatorSelectionViewModel.setOnPriceRecalculatedCallback { updatedCombination ->
+            Log.d("GeneratorSetModelCard", "Received updated combination for alternator change")
+            basePrice = updatedCombination.totalPriceUSD
+            externalAlternatorPrice = updatedCombination.totalPriceUSD
+            externalAlternatorName = "Alternador actualizado"
+        }
+        
+        itmSelectionViewModel.setOnPriceRecalculatedCallback { updatedCombination ->
+            Log.d("GeneratorSetModelCard", "Received updated combination for ITM change")
+            externalITMPrice = updatedCombination.priceOpen
+            externalITMName = "ITM actualizado"
+        }
+    }
+
+    // Escuchar eventos de actualización de combinación
+    val combinationUpdateEvents by generatorSetViewModel.combinationUpdateEvents.collectAsStateWithLifecycle(initialValue = null)
+
+    // Validación defensiva: No renderizar si no hay alternators
+    if (model.alternators.isEmpty()) {
+        Log.w("GeneratorSetModelCard", "Model '${model.name}' has no alternators, skipping render")
+        return
+    }
 
     val modelsSelected by generatorSetViewModel.modelsSelected.collectAsStateWithLifecycle()
 
@@ -661,6 +686,28 @@ fun GeneratorSetModelCard(
         }
     }
 
+    // Observar eventos de actualización de combinación
+    LaunchedEffect(combinationUpdateEvents) {
+        combinationUpdateEvents?.let { updatedResult ->
+            if (updatedResult.originalIntegradoraId == model.integradoraId) {
+                // Esta actualización es para nuestra combinación
+                val combination = updatedResult.updatedCombination
+                
+                Log.d("GeneratorSetModelCard", "🔄 Received update for combination ${model.integradoraId}")
+                Log.d("GeneratorSetModelCard", "Component changed: ${updatedResult.componentChanged}")
+                Log.d("GeneratorSetModelCard", "New alternator: ${updatedResult.newAlternatorId}")
+                Log.d("GeneratorSetModelCard", "New ITM: ${updatedResult.newItmId}")
+                
+                // Actualizar el precio base con el precio total USD de la combinación
+                basePrice = combination.totalPriceUSD
+                externalAlternatorPrice = combination.totalPriceUSD
+                externalITMPrice = combination.priceOpen
+                
+                Log.d("GeneratorSetModelCard", "💰 Updated prices - Total USD: ${combination.totalPriceUSD}, Open: ${combination.priceOpen}, Cabin: ${combination.priceCabin}")
+            }
+        }
+    }
+
     // Modales de selección de componentes
     // Modal de alternadores
     AlternatorsSelectionBottomSheet(
@@ -669,13 +716,38 @@ fun GeneratorSetModelCard(
         integradoraId = model.integradoraId,
         onDismiss = { showAlternatorsModal = false },
         onApply = { selectedId ->
-            // Obtener información completa del alternador seleccionado
-            val selectedAlternator = alternatorSelectionViewModel.getAlternatorById(selectedId)
-            if (selectedAlternator != null) {
-                externalAlternatorId = selectedId
-                externalAlternatorName = selectedAlternator.name
-                externalAlternatorPrice = selectedAlternator.price
-                Log.d("GeneratorSetModelCard", "Alternador seleccionado: ${selectedAlternator.name} - USD ${selectedAlternator.price}")
+            if (params != null) {
+                // Crear combinación temporal con los datos actuales del modelo
+                val currentCombination = GeneratorSetV2CombinationResponse(
+                    integradoraId = model.integradoraId,
+                    intKey = "",
+                    modelName = model.name,
+                    motorModel = model.motor.name,
+                    motorBrand = "",
+                    motorBrandVisual = "",
+                    alternatorModel = alternatorSelected.name,
+                    alternatorBrand = alternatorSelected.brand,
+                    alternatorId = alternatorSelected.id,
+                    itmId = model.itms?.first()?.id ?: 0,
+                    itmKitName = model.itms?.first()?.kitName,
+                    priceOpen = basePrice,
+                    priceCabin = basePrice,
+                    totalPriceUSD = basePrice,
+                    primeKW = alternatorSelected.modelDerate.prime.kw,
+                    primeKVA = alternatorSelected.modelDerate.prime.kva,
+                    standbyKW = alternatorSelected.modelDerate.standby.kw,
+                    standbyKVA = alternatorSelected.modelDerate.standby.kva,
+                    isSoundproof = params.isSoundproof
+                )
+                
+                // Recalcular combinación con nuevo alternador
+                alternatorSelectionViewModel.recalculatePriceWithAlternator(
+                    currentCombination = currentCombination,
+                    originalParams = params,
+                    newAlternatorId = selectedId
+                )
+                
+                Log.d("GeneratorSetModelCard", "🔄 Recalculating with new alternator: $selectedId")
             }
             showAlternatorsModal = false
         },
@@ -689,13 +761,38 @@ fun GeneratorSetModelCard(
         integradoraId = model.integradoraId,
         onDismiss = { showITMModal = false },
         onApply = { selectedId ->
-            // Obtener información completa del ITM seleccionado
-            val selectedITM = itmSelectionViewModel.getITMById(selectedId)
-            if (selectedITM != null) {
-                externalITMId = selectedId
-                externalITMName = selectedITM.kitName
-                externalITMPrice = selectedITM.price
-                Log.d("GeneratorSetModelCard", "ITM seleccionado: ${selectedITM.kitName} - USD ${selectedITM.price}")
+            if (params != null) {
+                // Crear combinación temporal con los datos actuales del modelo
+                val currentCombination = GeneratorSetV2CombinationResponse(
+                    integradoraId = model.integradoraId,
+                    intKey = "",
+                    modelName = model.name,
+                    motorModel = model.motor.name,
+                    motorBrand = "",
+                    motorBrandVisual = "",
+                    alternatorModel = alternatorSelected.name,
+                    alternatorBrand = alternatorSelected.brand,
+                    alternatorId = alternatorSelected.id,
+                    itmId = model.itms?.first()?.id ?: 0,
+                    itmKitName = model.itms?.first()?.kitName,
+                    priceOpen = basePrice,
+                    priceCabin = basePrice,
+                    totalPriceUSD = basePrice,
+                    primeKW = alternatorSelected.modelDerate.prime.kw,
+                    primeKVA = alternatorSelected.modelDerate.prime.kva,
+                    standbyKW = alternatorSelected.modelDerate.standby.kw,
+                    standbyKVA = alternatorSelected.modelDerate.standby.kva,
+                    isSoundproof = params.isSoundproof
+                )
+                
+                // Recalcular combinación con nuevo ITM
+                itmSelectionViewModel.recalculatePriceWithITM(
+                    currentCombination = currentCombination,
+                    originalParams = params,
+                    newITMId = selectedId
+                )
+                
+                Log.d("GeneratorSetModelCard", "🔄 Recalculating with new ITM: $selectedId")
             }
             showITMModal = false
         },

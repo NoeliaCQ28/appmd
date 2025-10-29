@@ -4,10 +4,12 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.fmsac.cotizadormodasa.core.generator_sets.GeneratingSetsParameters
 import com.fmsac.cotizadormodasa.core.generator_sets.ITMExtended
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.ITMExtendedMapper
 import com.fmsac.cotizadormodasa.data.network.ApiService
 import com.fmsac.cotizadormodasa.data.network.RetrofitInstance
+import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.GeneratorSetV2CombinationResponse
 import com.fmsac.cotizadormodasa.data.repositories.ITMExtendedRepository
 import com.fmsac.cotizadormodasa.presentation.state.FetchState
 import kotlinx.coroutines.Deferred
@@ -45,6 +47,12 @@ class ITMSelectionViewModel(application: Application) : AndroidViewModel(applica
         )
     }
 
+    // Referencias para obtener estado compartido con GeneratorSetViewModel
+    private var sharedGeneratorSetViewModel: GeneratorSetViewModel? = null
+    fun setSharedViewModel(viewModel: GeneratorSetViewModel) {
+        sharedGeneratorSetViewModel = viewModel
+    }
+
     // Estado de ITMs cargados
     private val _itms = MutableStateFlow<List<ITMExtended>>(emptyList())
     val itms: StateFlow<List<ITMExtended>> = _itms.asStateFlow()
@@ -77,6 +85,66 @@ class ITMSelectionViewModel(application: Application) : AndroidViewModel(applica
     // ID del ITM seleccionado temporalmente en el modal
     private val _tempSelectedITMId = MutableStateFlow<Int?>(null)
     val tempSelectedITMId: StateFlow<Int?> = _tempSelectedITMId.asStateFlow()
+
+    // Callback para notificar cambios en el precio
+    private var onPriceRecalculatedCallback: ((GeneratorSetV2CombinationResponse) -> Unit)? = null
+
+    fun setOnPriceRecalculatedCallback(callback: (GeneratorSetV2CombinationResponse) -> Unit) {
+        this.onPriceRecalculatedCallback = callback
+    }
+
+    /**
+     * Método público para disparar la recalculación de precio con ITM
+     * Usado por la UI a través del callback
+     */
+    fun recalculatePriceWithITM(
+        currentCombination: GeneratorSetV2CombinationResponse,
+        originalParams: GeneratingSetsParameters,
+        newITMId: Int
+    ) {
+        viewModelScope.launch {
+            try {
+                val repository = sharedGeneratorSetViewModel?.getGeneratorSetRepository()?.await()
+                    ?: throw Exception("Repository no disponible")
+                
+                val result = repository.changeConfiguration(
+                    originalParams = originalParams,
+                    integradoraId = currentCombination.integradoraId,
+                    currentAlternatorId = currentCombination.alternatorId,
+                    currentItmId = currentCombination.itmId,
+                    newAlternatorId = null,
+                    newItmId = newITMId
+                )
+                
+                result.fold(
+                    onSuccess = { updatedCombination ->
+                        // Llamar al callback con la combinación actualizada
+                        onPriceRecalculatedCallback?.invoke(updatedCombination)
+                        
+                        // Notificar al GeneratorSetViewModel de la actualización
+                        sharedGeneratorSetViewModel?.updateCombinationInLocalList(
+                            com.fmsac.cotizadormodasa.core.generator_sets.UpdatedCombinationResult(
+                                originalIntegradoraId = currentCombination.integradoraId,
+                                updatedCombination = updatedCombination,
+                                componentChanged = "itm",
+                                oldAlternatorId = currentCombination.alternatorId,
+                                oldItmId = currentCombination.itmId,
+                                newAlternatorId = currentCombination.alternatorId,
+                                newItmId = newITMId
+                            )
+                        )
+                        
+                        Log.d(TAG, "Price recalculated with new ITM: $newITMId")
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Error recalculating price with ITM: ${error.message}", error)
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception recalculating price with ITM: ${e.message}", e)
+            }
+        }
+    }
 
     /**
      * Carga los ITMs disponibles para una integradora

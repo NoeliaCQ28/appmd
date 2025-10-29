@@ -1,0 +1,26 @@
+# Data
+db_data_dev
+db_data_prod
+
+# Directorio de dependencias locales
+node_modules
+
+# Logs y archivos temporales
+*.log
+npm-debug.log*
+
+# Archivos de entorno (puedes ajustar según tus necesidades)
+.env
+.env.*
+
+# Archivos de configuración de Docker
+Dockerfile*
+.dockerignore
+
+# Archivos de control de versiones
+.git
+.gitignore
+
+# Otros directorios o archivos que no se necesitan en producción
+coverage
+dist

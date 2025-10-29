@@ -1,0 +1,55 @@
+{
+  "name": "cotizador_api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --reporter verbose",
+    "test:SAP": "vitest run --reporter verbose --dir test/SAP/",
+    "start": "bun docs:build && bun --bun ./src/index.js",
+    "dev": "bun docs:build && bun --bun --watch ./src/index.js",
+    "test:watch": "vitest",
+    "biome:format": "bunx biome format --write",
+    "biome:lint": "bunx biome lint --write",
+    "biome:check": "bunx biome check --write",
+    "docs:build": "bun src/build/api-spec.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.873.0",
+    "@scalar/express-api-reference": "0.8.21",
+    "axios": "1.11.0",
+    "bcrypt": "6.0.0",
+    "cors": "2.8.5",
+    "express": "5.1.0",
+    "express-rate-limit": "8.0.1",
+    "jsonwebtoken": "9.0.2",
+    "morgan": "1.10.1",
+    "multer": "1.4.5-lts.2",
+    "mysql2": "3.14.3",
+    "nodemailer": "7.0.6",
+    "socket.io": "4.8.1",
+    "socket.io-client": "^4.8.1",
+    "swagger-autogen": "2.23.7",
+    "ua-parser-js": "2.0.4",
+    "vitest": "3.2.4",
+    "winston": "3.17.0",
+    "xlsx": "0.18.5",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.2",
+    "supertest": "7.1.4"
+  },
+  "imports": {
+    "#libs/*": "./src/libs/*",
+    "#helpers/*": "./src/helpers/*",
+    "#controllers/*": "./src/controllers/*",
+    "#models/*": "./src/models/*",
+    "#routes/*": "./src/routes/*",
+    "#config/*": "./src/config/*"
+  }
+}

@@ -1,0 +1,26 @@
+services:
+  cotizador-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      # Configuración HTTPS para el subdominio
+      - "traefik.http.routers.cotizador-frontend.rule=Host(`cotizador.modasa.com.pe`)"
+      - "traefik.http.routers.cotizador-frontend.entrypoints=websecure"
+      - "traefik.http.routers.cotizador-frontend.tls=true"
+      - "traefik.http.routers.cotizador-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cotizador-frontend.loadbalancer.server.port=80"
+      # Redirección HTTP a HTTPS
+      - "traefik.http.routers.cotizador-frontend-http.rule=Host(`cotizador.modasa.com.pe`)"
+      - "traefik.http.routers.cotizador-frontend-http.entrypoints=web"
+      - "traefik.http.routers.cotizador-frontend-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true

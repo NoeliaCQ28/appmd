@@ -1,0 +1,44 @@
+services:
+  cotizador-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_TEST_DATABASE: ${DB_TEST_DATABASE}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      ERP_PROXY_API_ENDPOINT: ${ERP_PROXY_API_ENDPOINT}
+      ERP_PROXY_API_KEY: ${ERP_PROXY_API_KEY}
+      DATA_TRANSFORMER_API_ENDPOINT: ${DATA_TRANSFORMER_API_ENDPOINT}
+      DATA_TRANSFORMER_API_KEY: ${DATA_TRANSFORMER_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE}
+      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT}
+      AWS_S3_PUBLIC_ENDPOINT: ${AWS_S3_PUBLIC_ENDPOINT}
+      AWS_S3_PORT: ${AWS_S3_PORT}
+      AWS_S3_REGION: ${AWS_S3_REGION}
+      AWS_S3_ACCESS_KEY_ID: ${AWS_S3_ACCESS_KEY_ID}
+      AWS_S3_SECRET_ACCESS_KEY: ${AWS_S3_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cotizador-dev-backend.rule=PathPrefix(`/proyectos/dev-cotizador-api`)"
+      - "traefik.http.routers.cotizador-dev-backend.entrypoints=web"
+      - "traefik.http.services.cotizador-dev-backend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.cotizador-dev-backend.middlewares=cotizador-dev-backend-strip"
+      - "traefik.http.middlewares.cotizador-dev-backend-strip.stripprefix.prefixes=/proyectos/dev-cotizador-api"
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true

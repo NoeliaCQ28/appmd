@@ -1,0 +1,9 @@
+export const CustomerTypes = {
+  REVENDEDOR: 1,
+  FINAL: 2,
+  EJECUTOR: 3,
+  "LICITACION PUBLICA": 4,
+  PROYECTISTA: 5,
+  SUPERVISION: 6,
+  RENTING: 7,
+};

@@ -1,0 +1,303 @@
+@layer tailwind-base, primereact, tailwind-utilities;
+@import "primereact/resources/themes/lara-light-blue/theme.css";
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
+@layer tailwind-utilities {
+  @tailwind components;
+  @tailwind utilities;
+}
+
+/* accordion-overrides.css */
+
+/* Sobrescribe el fondo del header del Accordion con alta especificidad */
+.custom-accordion .p-accordion-header,
+.custom-accordion .p-accordion-header:hover,
+.custom-accordion .p-accordion-header:focus,
+.custom-accordion .p-accordion-header * {
+  background-color: white !important;
+  background: white !important;
+  border-radius: 8px;
+}
+
+/* Estilo para el contenido del accordion */
+.custom-accordion .p-accordion-content {
+  border-radius: 0 0 8px 8px;
+}
+
+@keyframes pulseScale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-pulseScale {
+  animation: pulseScale 3s ease-in-out infinite;
+}
+
+@keyframes onAutoFillStart {
+  from {
+  }
+  to {
+  }
+}
+@keyframes onAutoFillCancel {
+  from {
+  }
+  to {
+  }
+}
+
+/* Esta regla es necesaria para que el input dispare la animación cuando se autocompleta */
+input:-webkit-autofill {
+  animation-name: onAutoFillStart;
+  animation-fill-mode: both;
+}
+
+.p-dropdown-filter {
+  width: 100%;
+  border-radius: 0.5rem;
+}
+
+.p-dropdown-panel
+  .p-dropdown-items
+  .p-dropdown-item:not(.p-highlight):not(.p-disabled).p-focus {
+  color: #495057;
+  background: #fff9ec;
+}
+
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight.p-focus {
+  background: #fff6e3;
+}
+
+.p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
+  color: #495057;
+  background: #fff6e3;
+}
+
+/* Estilo base del radio */
+.custom-radio {
+  /* Eliminamos el estilo nativo del radio */
+  appearance: none; /* Para navegadores modernos */
+  -webkit-appearance: none; /* Para Safari (WebKit)        */
+  -moz-appearance: none; /* Para Firefox                */
+
+  /* Dimensiones y forma */
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  vertical-align: middle;
+  margin-right: 8px; /* Espacio para el texto */
+}
+
+/* Al marcar el radio, mostramos un punto centrado */
+.custom-radio:checked::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #f1c40f; /* Amarillo por defecto */
+}
+
+/* Cuando el padre tenga la clase .active, cambiamos el color del punto */
+.parent.active .custom-radio:checked::before {
+  background-color: #2ecc71; /* Verde */
+}
+
+.p-password {
+  width: 100%;
+  border-radius: 0.5rem;
+}
+
+.p-password-input {
+  border-radius: 0.5rem;
+  width: 100%;
+}
+
+/* Deshabilita el checkbox de la cabecera de la tabla */
+.p-datatable-thead .p-selection-column .p-checkbox {
+  display: none !important;
+}
+
+/* Opcional: hacer que bg-blue-100 tenga más peso si no se aplica */
+.p-datatable {
+  @apply rounded-lg border border-gray-200
+}
+
+.p-panel-header {
+  border-radius: 10px 10px 0 0 !important;
+  background-color: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  color: #374151 !important;
+  padding: 1rem 1.25rem !important;
+  transition: all 0.3s ease-in-out !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.p-panel .p-panel-header:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.p-panel-content {
+  border-radius: 0 0 10px 10px !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-top: none !important;
+  padding: 1.25rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.scroll-mask-white {
+  /* máscara de 0 → 1 → 1 → 0 en Y */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0),
+    /* transparente arriba */ rgba(0, 0, 0, 1) 10%,
+    /* opaco muy pronto */ rgba(0, 0, 0, 1) 90%,
+    /* sigue opaco casi hasta abajo */ rgba(0, 0, 0, 0) /* transparente abajo */
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+}
+
+/* PrimeReact Editor (Quill) aesthetic overrides */
+.textarea {
+  /* wrapper controls the visual container */
+  border: 1px solid #dbdbdb !important; /* gray-200 */
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  overflow: hidden; /* clip inner corners */
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.textarea:focus-within {
+  border-color: #cccccc !important; /* orange-500 */
+  box-shadow: 0 0 0 4px rgba(212, 212, 212, 0.15);
+}
+
+/* Remove inner borders so the wrapper defines the shape */
+.textarea .ql-toolbar.ql-snow,
+.textarea .ql-container.ql-snow {
+  border: none !important;
+}
+
+/* Toolbar look */
+.textarea .ql-toolbar {
+  background: #fafafa !important; /* subtle gray */
+  padding: 0.5rem 0.75rem !important;
+}
+
+.textarea .ql-toolbar .ql-formats button,
+.textarea .ql-toolbar .ql-formats .ql-picker-label {
+  color: #6b7280 !important; /* gray-500 */
+  transition: color 150ms ease, background-color 150ms ease;
+  border-radius: 8px;
+}
+
+.textarea .ql-toolbar .ql-formats button:hover,
+.textarea .ql-toolbar .ql-formats .ql-picker-label:hover {
+  color: #111827 !important; /* gray-900 */
+  background-color: #f3f4f6 !important; /* gray-100 */
+}
+
+.textarea .ql-toolbar .ql-formats button.ql-active,
+.textarea .ql-toolbar .ql-formats .ql-picker-label.ql-active {
+  color: #f59e0b !important; /* orange-500 */
+  background-color: #fffbeb !important; /* amber-50 */
+}
+
+/* Content area */
+.textarea .ql-container {
+  background: #ffffff !important;
+  /* máscara de 0 → 1 → 1 → 0 en Y */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0),
+    /* transparente arriba */ rgba(0, 0, 0, 1) 10%,
+    /* opaco muy pronto */ rgba(0, 0, 0, 1) 90%,
+    /* sigue opaco casi hasta abajo */ rgba(0, 0, 0, 0) /* transparente abajo */
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 10%,
+    black 90%,
+    transparent
+  );
+}
+
+.textarea .ql-editor {
+  min-height: 240px; /* comfortable default height */
+  padding: 0.75rem 1rem !important;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Placeholder style */
+.textarea .ql-editor.ql-blank::before {
+  color: #9ca3af !important; /* gray-400 */
+  font-style: normal !important;
+}
+
+/* Smooth scrollbar (WebKit) */
+.textarea .ql-editor::-webkit-scrollbar {
+  width: 10px;
+}
+.textarea .ql-editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.textarea .ql-editor::-webkit-scrollbar-thumb {
+  background: #e5e7eb; /* gray-200 */
+  border-radius: 9999px;
+  border: 2px solid #fff; /* keep thumb separated from content */
+}
+
+.textarea .ql-editor::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db; /* gray-300 */
+}
+
+/* Quill icon colors (SVG) to match states */
+.textarea .ql-snow .ql-stroke {
+  stroke: #6b7280 !important; /* gray-500 */
+}
+
+.textarea .ql-snow .ql-fill {
+  fill: #6b7280 !important; /* gray-500 */
+}
+
+.textarea .ql-toolbar .ql-formats button:hover .ql-stroke,
+.textarea .ql-toolbar .ql-formats .ql-picker-label:hover .ql-stroke,
+.textarea .ql-toolbar .ql-formats button:hover .ql-fill,
+.textarea .ql-toolbar .ql-formats .ql-picker-label:hover .ql-fill {
+  stroke: #111827 !important; /* gray-900 */
+  fill: #111827 !important;
+}
+
+.textarea .ql-toolbar .ql-formats button.ql-active .ql-stroke,
+.textarea .ql-toolbar .ql-formats .ql-picker-label.ql-active .ql-stroke,
+.textarea .ql-toolbar .ql-formats button.ql-active .ql-fill,
+.textarea .ql-toolbar .ql-formats .ql-picker-label.ql-active .ql-fill {
+  stroke: #f59e0b !important; /* orange-500 */
+  fill: #f59e0b !important;
+}

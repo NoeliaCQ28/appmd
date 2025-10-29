@@ -1,0 +1,16 @@
+services:
+  cotizador-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cotizador-dev-frontend.rule=PathPrefix(`/proyectos/dev-cotizador`)"
+      - "traefik.http.routers.cotizador-dev-frontend.entrypoints=web"
+      - "traefik.http.services.cotizador-dev-frontend.loadbalancer.server.port=80"
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true

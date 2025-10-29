@@ -1,0 +1,11 @@
+# Node modules and build artifacts
+node_modules
+
+# Environment files
+.env
+.env.local
+.env.prod
+
+# Data volumes
+db_data_dev
+db_data_prod

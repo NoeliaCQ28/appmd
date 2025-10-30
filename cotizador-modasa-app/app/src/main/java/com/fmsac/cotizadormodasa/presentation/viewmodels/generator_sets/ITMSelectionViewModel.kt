@@ -107,8 +107,8 @@ class ITMSelectionViewModel(application: Application) : AndroidViewModel(applica
             try {
                 val repository = sharedGeneratorSetViewModel?.getGeneratorSetRepository()?.await()
                     ?: throw Exception("Repository no disponible")
-                
-                val result = repository.changeConfiguration(
+
+                val result = repository.simulateAlternatorSwap(
                     originalParams = originalParams,
                     integradoraId = currentCombination.integradoraId,
                     modelName = currentCombination.modelName,

@@ -5,6 +5,8 @@ import android.util.Log
 import com.fmsac.cotizadormodasa.core.generator_sets.ITMExtended
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.ITMExtendedMapper
 import com.fmsac.cotizadormodasa.data.network.ApiService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Repositorio para gestionar ITMs extendidos
@@ -41,7 +43,10 @@ class ITMExtendedRepository(
             throw Exception("No se recibieron datos de ITMs")
         }
 
-        val itms = mapper.fromDTOList(response.data)
+        // Ejecutar el mapeo en un hilo de fondo para evitar bloquear el hilo principal
+        val itms = withContext(Dispatchers.Default) {
+            mapper.fromDTOList(response.data)
+        }
         Log.d(TAG, "Mapped ${itms.size} ITMs successfully")
         Log.d(TAG, "=== END getAllByIntegradora ===")
 

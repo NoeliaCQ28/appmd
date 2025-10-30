@@ -170,6 +170,8 @@ const QuotesModel = {
             eliminado,
             canal_distribucion_id,
             incoterm_id,
+            data.incoterm_valor || 0,
+            data.incoterm_valor_seguro || 0,
             descuento_global,
             margen_global,
             observaciones,

@@ -79,9 +79,9 @@ interface ApiService {
         @Path("integradoraId") integradoraId: Int
     ): Response<List<ITMExtendedResponse>>
 
-    // Endpoint para recalcular precios con nueva configuración de componentes
-    @POST("/api/v2/generator-sets/change-configuration")
-    suspend fun changeConfiguration(
+    // Endpoint para simular cambio de alternador/ITM y recalcular precios
+    @POST("/api/v2/generator-sets/simulate-alternator-swap")
+    suspend fun simulateAlternatorSwap(
         @Body request: ChangeConfigurationRequest
     ): Response<ChangeConfigurationResponse>
 

@@ -51,4 +51,11 @@ router.post(
   GeneratorSetController.changeConfiguration,
 );
 
+// Endpoint canónico para simulación (usado por app móvil Android)
+router.post(
+  "/simulate-alternator-swap",
+  authMiddleware,
+  GeneratorSetController.changeConfiguration,
+);
+
 export default router;

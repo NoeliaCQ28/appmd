@@ -5,6 +5,8 @@ import android.util.Log
 import com.fmsac.cotizadormodasa.core.generator_sets.AlternatorExtended
 import com.fmsac.cotizadormodasa.data.mappers.generator_sets.AlternatorExtendedMapper
 import com.fmsac.cotizadormodasa.data.network.ApiService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Repositorio para gestionar alternadores extendidos
@@ -41,7 +43,10 @@ class AlternatorExtendedRepository(
             throw Exception("No se recibieron datos de alternadores")
         }
 
-        val alternators = mapper.fromDTOList(response.data)
+        // Ejecutar el mapeo en un hilo de fondo para evitar bloquear el hilo principal
+        val alternators = withContext(Dispatchers.Default) {
+            mapper.fromDTOList(response.data)
+        }
         Log.d(TAG, "Mapped ${alternators.size} alternators successfully")
         Log.d(TAG, "=== END getAllByIntegradora ===")
 

@@ -113,6 +113,12 @@ fun GeneratorSetModelCard(
     var externalITMId by rememberSaveable { mutableIntStateOf(0) }
     var externalITMName by rememberSaveable { mutableStateOf<String?>(null) }
 
+    // External power ratings (Prime and Standby)
+    var externalPrimeKW by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var externalPrimeKVA by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var externalStandbyKW by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var externalStandbyKVA by rememberSaveable { mutableDoubleStateOf(0.0) }
+
     var selectedAccessoryIds by rememberSaveable { mutableStateOf<Set<Int>>(emptySet()) }
 
     // Establecer referencia compartida con los ViewModels de selección
@@ -197,18 +203,21 @@ fun GeneratorSetModelCard(
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            val primePower = alternatorSelected.modelDerate.prime
-            val standByPower = alternatorSelected.modelDerate.standby
+            // Usar potencias externas si están disponibles, de lo contrario usar las del alternador seleccionado
+            val primePowerKW = if (externalPrimeKW > 0.0) externalPrimeKW else alternatorSelected.modelDerate.prime.kw
+            val primePowerKVA = if (externalPrimeKVA > 0.0) externalPrimeKVA else alternatorSelected.modelDerate.prime.kva
+            val standByPowerKW = if (externalStandbyKW > 0.0) externalStandbyKW else alternatorSelected.modelDerate.standby.kw
+            val standByPowerKVA = if (externalStandbyKVA > 0.0) externalStandbyKVA else alternatorSelected.modelDerate.standby.kva
 
             Text(
-                "Potencia Prime: ${primePower.kw} KW - ${primePower.kva} KVA",
+                "Potencia Prime: $primePowerKW KW - $primePowerKVA KVA",
                 style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 14.sp)
             )
 
             Spacer(modifier = Modifier.height(1.dp))
 
             Text(
-                "Potencia Stand By: ${standByPower.kw} KW - ${standByPower.kva} KVA",
+                "Potencia Stand By: $standByPowerKW KW - $standByPowerKVA KVA",
                 style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 14.sp)
             )
 
@@ -248,6 +257,10 @@ fun GeneratorSetModelCard(
                                         externalAlternatorName = null
                                         externalITMId = 0
                                         externalITMName = null
+                                        externalPrimeKW = 0.0
+                                        externalPrimeKVA = 0.0
+                                        externalStandbyKW = 0.0
+                                        externalStandbyKVA = 0.0
                                     }
 
                                 },
@@ -685,8 +698,15 @@ fun GeneratorSetModelCard(
                 externalITMId = combination.itmId
                 externalITMName = combination.itmKitName ?: "ITM ${combination.itmId}"
 
+                // Actualizar potencias Prime y Standby desde la respuesta de la API
+                externalPrimeKW = combination.primeKW
+                externalPrimeKVA = combination.primeKVA
+                externalStandbyKW = combination.standbyKW
+                externalStandbyKVA = combination.standbyKVA
+
                 Log.d("GeneratorSetModelCard", "💰 Updated prices - Total USD: ${combination.totalPriceUSD}")
                 Log.d("GeneratorSetModelCard", "💰 basePrice: $basePrice, externalCombinationPrice: $externalCombinationPrice")
+                Log.d("GeneratorSetModelCard", "⚡ Updated power - Prime: ${combination.primeKW} KW / ${combination.primeKVA} KVA, Standby: ${combination.standbyKW} KW / ${combination.standbyKVA} KVA")
             }
         }
     }

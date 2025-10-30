@@ -124,7 +124,7 @@ class GeneratorSetModelsRepository(
     }
 
     /**
-     * Recalcula el precio de una combinación con nueva configuración de componentes
+     * Simula el cambio de alternador/ITM y recalcula precios, potencias y pesos
      * @param originalParams Parámetros de búsqueda originales
      * @param integradoraId ID de la combinación actual
      * @param currentAlternatorId ID del alternador actual (debe ser válido)
@@ -133,7 +133,7 @@ class GeneratorSetModelsRepository(
      * @param newItmId ID del nuevo ITM (null si no cambia)
      * @return Result con la combinación recalculada o error
      */
-    suspend fun changeConfiguration(
+    suspend fun simulateAlternatorSwap(
         originalParams: GeneratingSetsParameters,
         integradoraId: Int,
         modelName: String,
@@ -143,8 +143,8 @@ class GeneratorSetModelsRepository(
         newItmId: Int? = null
     ): Result<GeneratorSetV2CombinationResponse> {
         return try {
-            Log.d("GeneratorSetRepository", "=== START changeConfiguration ===")
-            Log.d("GeneratorSetRepository", "Recalculating for integradoraId: $integradoraId")
+            Log.d("GeneratorSetRepository", "=== START simulateAlternatorSwap ===")
+            Log.d("GeneratorSetRepository", "Simulating swap for integradoraId: $integradoraId")
             Log.d("GeneratorSetRepository", "Current alternatorId: $currentAlternatorId, current itmId: $currentItmId")
             Log.d("GeneratorSetRepository", "New alternatorId: $newAlternatorId, new itmId: $newItmId")
 
@@ -193,8 +193,8 @@ class GeneratorSetModelsRepository(
             Log.d("GeneratorSetRepository", "Request payload: integradoraId=${changeConfigRequest.integradoraId}, marketId=${changeConfigRequest.params.marketId}")
             Log.d("GeneratorSetRepository", "JSON order: configuration, integradoraId, params")
 
-            // Llamar al endpoint real sin fallbacks
-            val response = api.changeConfiguration(changeConfigRequest)
+            // Llamar al endpoint de simulación V2
+            val response = api.simulateAlternatorSwap(changeConfigRequest)
 
             Log.d("GeneratorSetRepository", "=== API RESPONSE RECEIVED ===")
             Log.d("GeneratorSetRepository", "Response success: ${response.success}")
@@ -216,7 +216,7 @@ class GeneratorSetModelsRepository(
 
             Result.success(response.data.combination)
         } catch (e: Exception) {
-            Log.e("GeneratorSetRepository", "❌ Error changing configuration: ${e.message}", e)
+            Log.e("GeneratorSetRepository", "❌ Error simulating alternator swap: ${e.message}", e)
             Result.failure(e)
         }
     }

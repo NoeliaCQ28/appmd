@@ -136,6 +136,7 @@ class GeneratorSetModelsRepository(
     suspend fun changeConfiguration(
         originalParams: GeneratingSetsParameters,
         integradoraId: Int,
+        modelName: String,
         currentAlternatorId: Int,
         currentItmId: Int,
         newAlternatorId: Int? = null,
@@ -158,10 +159,23 @@ class GeneratorSetModelsRepository(
                 throw Exception("Debe especificarse al menos un componente nuevo (newAlternatorId o newItmId)")
             }
 
-            // Para usar el endpoint existente, usamos los parámetros originales
-            // El backend debería aplicar los cambios automáticamente
-            val requestDTO = paramsMapper.toDTO(originalParams)
-            Log.d("GeneratorSetRepository", "Using existing endpoint with params: voltage=${requestDTO.voltage}, frequency=${requestDTO.frequency}, model=${requestDTO.modelo}")
+            // Construir params específicos para change-configuration (sin motorMarca)
+            // IMPORTANTE: 'modelo' debe ser el nombre del modelo del grupo/combinación que se está editando
+            val params = com.fmsac.cotizadormodasa.data.network.request.generator_sets.change_configuration.ChangeConfigParams(
+                altura = originalParams.heightAtSeaLevel,
+                factorPotencia = originalParams.powerFactor,
+                fases = originalParams.phases,
+                frecuencia = originalParams.frequency,
+                insonoro = originalParams.isSoundproof,
+                marketId = originalParams.marketId,
+                modelo = modelName,
+                powerThreshold = originalParams.powerThreshold,
+                primePower = originalParams.primePower,
+                standbyPower = originalParams.standbyPower,
+                temperatura = originalParams.temperature,
+                voltaje = originalParams.voltage
+            )
+            Log.d("GeneratorSetRepository", "Using change-configuration params: voltaje=${params.voltaje}, frecuencia=${params.frecuencia}, modelo=${params.modelo}, marketId=${params.marketId}")
 
             // Crear configuración con AMBOS componentes (usar valores actuales para los que no cambian)
             val configuration = com.fmsac.cotizadormodasa.data.network.request.generator_sets.change_configuration.NewConfiguration(
@@ -173,7 +187,7 @@ class GeneratorSetModelsRepository(
             val changeConfigRequest = ChangeConfigurationRequest(
                 configuration = configuration,
                 integradoraId = integradoraId,
-                params = requestDTO
+                params = params
             )
             
             Log.d("GeneratorSetRepository", "Request payload: integradoraId=${changeConfigRequest.integradoraId}, marketId=${changeConfigRequest.params.marketId}")

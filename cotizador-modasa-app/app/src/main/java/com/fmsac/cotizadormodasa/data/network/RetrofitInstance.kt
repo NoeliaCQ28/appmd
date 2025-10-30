@@ -6,6 +6,8 @@ import com.fmsac.cotizadormodasa.data.network.interceptors.AuthInterceptor
 import com.fmsac.cotizadormodasa.data.network.interceptors.loggingInterceptor
 import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import java.util.concurrent.TimeUnit
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -16,9 +18,20 @@ enum class ENVIRONMENT(val endpoint: String) {
 }
 
 fun provideOkHttpClient(context: Context): OkHttpClient {
+    // Configurar el nivel del logging interceptor según si la app es debuggable
+    val isDebuggable = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+    loggingInterceptor.level = if (isDebuggable) {
+        HttpLoggingInterceptor.Level.BODY
+    } else {
+        HttpLoggingInterceptor.Level.NONE
+    }
+
     return OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor(context))
         .addInterceptor(loggingInterceptor)
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 }
 

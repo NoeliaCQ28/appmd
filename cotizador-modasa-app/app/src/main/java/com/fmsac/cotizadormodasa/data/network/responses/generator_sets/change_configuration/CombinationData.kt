@@ -4,9 +4,12 @@ import com.fmsac.cotizadormodasa.data.network.responses.generator_sets.Generator
 import com.google.gson.annotations.SerializedName
 
 /**
- * Datos de la combinación recalculada
+ * Datos de la combinación recalculada (estructura exacta del backend)
  */
 data class CombinationData(
+    @SerializedName("sIntKey")
+    val sIntKey: String?,
+
     @SerializedName("combination")
-    val combination: GeneratorSetV2CombinationResponse
+    val combination: GeneratorSetV2CombinationResponse?
 )

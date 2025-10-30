@@ -109,6 +109,7 @@ class AlternatorSelectionViewModel(application: Application) : AndroidViewModel(
                 val result = repository.changeConfiguration(
                     originalParams = originalParams,
                     integradoraId = currentCombination.integradoraId,
+                    modelName = currentCombination.modelName,
                     currentAlternatorId = currentCombination.alternatorId,
                     currentItmId = currentCombination.itmId,
                     newAlternatorId = newAlternatorId,

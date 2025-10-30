@@ -36,6 +36,13 @@ data class GeneratorSetV2CombinationResponse(
     @SerializedName("sKitItm")
     val itmKitName: String?,
 
+    // Campos de ITM que el backend envía como String
+    @SerializedName("nITMCostoUSD")
+    val nITMCostoUSD: String? = null,
+
+    @SerializedName("nITMPrecioUSD")
+    val nITMPrecioUSD: String? = null,
+
     @SerializedName("nIntPrecioGEAbierto")
     val priceOpen: Double,
 

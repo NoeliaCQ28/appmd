@@ -110,6 +110,7 @@ class ITMSelectionViewModel(application: Application) : AndroidViewModel(applica
                 val result = repository.changeConfiguration(
                     originalParams = originalParams,
                     integradoraId = currentCombination.integradoraId,
+                    modelName = currentCombination.modelName,
                     currentAlternatorId = currentCombination.alternatorId,
                     currentItmId = currentCombination.itmId,
                     newAlternatorId = null,

@@ -1,6 +1,6 @@
 package com.fmsac.cotizadormodasa.data.network.request.generator_sets.change_configuration
 
-import com.fmsac.cotizadormodasa.data.network.request.generator_sets.GeneratingSetsParametersRequest
+import com.fmsac.cotizadormodasa.data.network.request.generator_sets.change_configuration.ChangeConfigParams
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -15,5 +15,5 @@ data class ChangeConfigurationRequest(
     val integradoraId: Int,
     
     @SerializedName("params")
-    val params: GeneratingSetsParametersRequest
+    val params: ChangeConfigParams
 )

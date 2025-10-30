@@ -19,12 +19,14 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.OfflineBolt
 import androidx.compose.material.icons.filled.Power
 import androidx.compose.material3.Badge
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -220,6 +222,54 @@ fun GeneratorSetModelCard(
                 "Potencia Stand By: $standByPowerKW KW - $standByPowerKVA KVA",
                 style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 14.sp)
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Selector de Régimen Prime/Standby
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        generatorSetViewModel.updateModelRegimen(model.id, "Prime")
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isThisModelSelected,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (model.selectedRegimen == "Prime")
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.surface,
+                        contentColor = if (model.selectedRegimen == "Prime")
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Text("Prime")
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        generatorSetViewModel.updateModelRegimen(model.id, "Standby")
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isThisModelSelected,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (model.selectedRegimen == "Standby")
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.surface,
+                        contentColor = if (model.selectedRegimen == "Standby")
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Text("Standby")
+                }
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 

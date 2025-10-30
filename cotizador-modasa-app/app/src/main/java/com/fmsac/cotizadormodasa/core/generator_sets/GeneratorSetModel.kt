@@ -8,7 +8,8 @@ data class GeneratorSetModel(
     val name: String,
     val motor: GeneratorSetMotor,
     val alternators: List<GeneratorSetAlternator>,
-    val integradoraId: Int = 0  // ID de la integradora para búsqueda de componentes externos
+    val integradoraId: Int = 0,  // ID de la integradora para búsqueda de componentes externos
+    val selectedRegimen: String = "Prime"  // Régimen seleccionado por el usuario (Prime/Standby)
 )
 
 data class GeneratorSetMotor(

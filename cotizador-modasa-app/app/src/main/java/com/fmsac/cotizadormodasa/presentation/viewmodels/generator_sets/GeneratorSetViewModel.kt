@@ -212,6 +212,22 @@ class GeneratorSetViewModel(application: Application) : AndroidViewModel(applica
         Log.d("GeneratorSetViewModel", "Cleared all updated combinations")
     }
 
+    /**
+     * Actualiza el régimen seleccionado (Prime/Standby) de un modelo específico
+     * @param modelId ID del modelo a actualizar
+     * @param regimen Nuevo régimen ("Prime" o "Standby")
+     */
+    fun updateModelRegimen(modelId: Int, regimen: String) {
+        models.value = models.value.map { model ->
+            if (model.id == modelId) {
+                model.copy(selectedRegimen = regimen)
+            } else {
+                model
+            }
+        }
+        Log.d(TAG, "Updated model $modelId regime to: $regimen")
+    }
+
     companion object {
         private const val TAG = "GeneratorSetViewModel"
     }

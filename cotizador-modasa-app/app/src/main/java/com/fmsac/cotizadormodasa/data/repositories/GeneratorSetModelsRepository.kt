@@ -180,7 +180,7 @@ class GeneratorSetModelsRepository(
             // Crear configuración con AMBOS componentes (usar valores actuales para los que no cambian)
             val configuration = com.fmsac.cotizadormodasa.data.network.request.generator_sets.change_configuration.NewConfiguration(
                 alternatorId = newAlternatorId ?: currentAlternatorId,
-                itmId = newItmId ?: currentItmId
+                itmId = if (newAlternatorId != null) newItmId else (newItmId ?: currentItmId)
             )
             
             // Crear request en el ORDEN CORRECTO del JSON web
@@ -206,15 +206,15 @@ class GeneratorSetModelsRepository(
                 throw Exception(errorMsg)
             }
 
-            if (response.data == null || response.data.data == null || response.data.data.combination == null) {
-                Log.e("GeneratorSetRepository", "❌ API response data is null")
+            if (response.data == null || response.data.combination == null) {
+                Log.e("GeneratorSetRepository", "❌ API response data or combination is null")
                 throw Exception("No se recibió datos de la combinación recalculada")
             }
 
             Log.d("GeneratorSetRepository", "=== SUCCESS: Combination recalculated ===")
-            Log.d("GeneratorSetRepository", "New combination: ${response.data.data.combination}")
+            Log.d("GeneratorSetRepository", "New combination: ${response.data.combination}")
 
-            Result.success(response.data.data.combination)
+            Result.success(response.data.combination)
         } catch (e: Exception) {
             Log.e("GeneratorSetRepository", "❌ Error changing configuration: ${e.message}", e)
             Result.failure(e)

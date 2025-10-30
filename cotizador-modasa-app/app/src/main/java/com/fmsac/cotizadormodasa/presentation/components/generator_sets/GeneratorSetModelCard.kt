@@ -108,11 +108,10 @@ fun GeneratorSetModelCard(
     // External component selection
     var externalAlternatorId by rememberSaveable { mutableIntStateOf(0) }
     var externalAlternatorName by rememberSaveable { mutableStateOf<String?>(null) }
-    var externalAlternatorPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var externalCombinationPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
 
     var externalITMId by rememberSaveable { mutableIntStateOf(0) }
     var externalITMName by rememberSaveable { mutableStateOf<String?>(null) }
-    var externalITMPrice by rememberSaveable { mutableDoubleStateOf(0.0) }
 
     var selectedAccessoryIds by rememberSaveable { mutableStateOf<Set<Int>>(emptySet()) }
 
@@ -120,20 +119,6 @@ fun GeneratorSetModelCard(
     LaunchedEffect(Unit) {
         alternatorSelectionViewModel.setSharedViewModel(generatorSetViewModel)
         itmSelectionViewModel.setSharedViewModel(generatorSetViewModel)
-        
-        // Establecer callbacks para recibir resultados de recalculación
-        alternatorSelectionViewModel.setOnPriceRecalculatedCallback { updatedCombination ->
-            Log.d("GeneratorSetModelCard", "Received updated combination for alternator change")
-            basePrice = updatedCombination.totalPriceUSD
-            externalAlternatorPrice = updatedCombination.totalPriceUSD
-            externalAlternatorName = "Alternador actualizado"
-        }
-        
-        itmSelectionViewModel.setOnPriceRecalculatedCallback { updatedCombination ->
-            Log.d("GeneratorSetModelCard", "Received updated combination for ITM change")
-            externalITMPrice = updatedCombination.priceOpen
-            externalITMName = "ITM actualizado"
-        }
     }
 
     // Escuchar eventos de actualización de combinación
@@ -174,7 +159,7 @@ fun GeneratorSetModelCard(
     // Precio total antes de descuentos (base + componentes externos + accesorios)
     val totalPriceBeforeDiscount by remember {
         derivedStateOf {
-            basePrice + externalAlternatorPrice + externalITMPrice + accessoriesTotal
+            basePrice + externalCombinationPrice + accessoriesTotal
         }
     }
 
@@ -254,7 +239,15 @@ fun GeneratorSetModelCard(
 
                                     if (alternator != null) {
                                         alternatorSelected = alternator
+                                        // Asignar precio base del radio button seleccionado
                                         basePrice = alternator.modelPrice
+
+                                        // Resetear estado externo (mutuamente excluyente con basePrice)
+                                        externalCombinationPrice = 0.0
+                                        externalAlternatorId = 0
+                                        externalAlternatorName = null
+                                        externalITMId = 0
+                                        externalITMName = null
                                     }
 
                                 },
@@ -410,6 +403,7 @@ fun GeneratorSetModelCard(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
+                        // Mostrar alternador externo si está seleccionado
                         if (externalAlternatorId != 0) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -424,32 +418,10 @@ fun GeneratorSetModelCard(
                                     softWrap = true,
                                     overflow = TextOverflow.Ellipsis
                                 )
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "$ $externalAlternatorPrice",
-                                        modifier = Modifier.padding(end = 4.dp),
-                                        style = TextStyle(fontSize = MaterialTheme.typography.bodySmall.fontSize)
-                                    )
-                                    IconButton(
-                                        onClick = {
-                                            externalAlternatorId = 0
-                                            externalAlternatorName = null
-                                            externalAlternatorPrice = 0.0
-                                        },
-                                        enabled = !isThisModelSelected
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Eliminar alternador",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
                             }
                         }
 
+                        // Mostrar ITM externo si está seleccionado
                         if (externalITMId != 0) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -464,29 +436,6 @@ fun GeneratorSetModelCard(
                                     softWrap = true,
                                     overflow = TextOverflow.Ellipsis
                                 )
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "$ $externalITMPrice",
-                                        modifier = Modifier.padding(end = 4.dp),
-                                        style = TextStyle(fontSize = MaterialTheme.typography.bodySmall.fontSize)
-                                    )
-                                    IconButton(
-                                        onClick = {
-                                            externalITMId = 0
-                                            externalITMName = null
-                                            externalITMPrice = 0.0
-                                        },
-                                        enabled = !isThisModelSelected
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Eliminar ITM",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
                             }
                         }
 
@@ -497,18 +446,40 @@ fun GeneratorSetModelCard(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
+                        // Mostrar precio total de la combinación con botón de eliminar
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 "TOTAL EXTERNOS",
                                 style = TextStyle(fontWeight = FontWeight.SemiBold)
                             )
-                            Text(
-                                "$ ${externalAlternatorPrice + externalITMPrice}",
-                                style = TextStyle(fontWeight = FontWeight.SemiBold)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "$ $externalCombinationPrice",
+                                    style = TextStyle(fontWeight = FontWeight.SemiBold)
+                                )
+                                IconButton(
+                                    onClick = {
+                                        externalCombinationPrice = 0.0
+                                        externalAlternatorId = 0
+                                        externalAlternatorName = null
+                                        externalITMId = 0
+                                        externalITMName = null
+                                    },
+                                    enabled = !isThisModelSelected
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Eliminar combinación externa",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -692,18 +663,30 @@ fun GeneratorSetModelCard(
             if (updatedResult.originalIntegradoraId == model.integradoraId) {
                 // Esta actualización es para nuestra combinación
                 val combination = updatedResult.updatedCombination
-                
+
                 Log.d("GeneratorSetModelCard", "🔄 Received update for combination ${model.integradoraId}")
                 Log.d("GeneratorSetModelCard", "Component changed: ${updatedResult.componentChanged}")
                 Log.d("GeneratorSetModelCard", "New alternator: ${updatedResult.newAlternatorId}")
                 Log.d("GeneratorSetModelCard", "New ITM: ${updatedResult.newItmId}")
-                
-                // Actualizar el precio base con el precio total USD de la combinación
-                basePrice = combination.totalPriceUSD
-                externalAlternatorPrice = combination.totalPriceUSD
-                externalITMPrice = combination.priceOpen
-                
-                Log.d("GeneratorSetModelCard", "💰 Updated prices - Total USD: ${combination.totalPriceUSD}, Open: ${combination.priceOpen}, Cabin: ${combination.priceCabin}")
+
+                // Lógica de precios: El totalPriceUSD ya incluye todo, así que desactivamos basePrice
+                basePrice = 0.0
+
+                // Deseleccionar radio button
+                setAlternatorNameSelected("")
+
+                // Asignar el precio total de la combinación
+                externalCombinationPrice = combination.totalPriceUSD
+
+                // Actualizar IDs y nombres de AMBOS componentes
+                externalAlternatorId = combination.alternatorId
+                externalAlternatorName = combination.alternatorModel
+
+                externalITMId = combination.itmId
+                externalITMName = combination.itmKitName ?: "ITM ${combination.itmId}"
+
+                Log.d("GeneratorSetModelCard", "💰 Updated prices - Total USD: ${combination.totalPriceUSD}")
+                Log.d("GeneratorSetModelCard", "💰 basePrice: $basePrice, externalCombinationPrice: $externalCombinationPrice")
             }
         }
     }
@@ -744,7 +727,8 @@ fun GeneratorSetModelCard(
                 alternatorSelectionViewModel.recalculatePriceWithAlternator(
                     currentCombination = currentCombination,
                     originalParams = params,
-                    newAlternatorId = selectedId
+                    newAlternatorId = selectedId,
+                    currentItmId = externalITMId.takeIf { it != 0 }
                 )
                 
                 Log.d("GeneratorSetModelCard", "🔄 Recalculating with new alternator: $selectedId")
@@ -789,7 +773,8 @@ fun GeneratorSetModelCard(
                 itmSelectionViewModel.recalculatePriceWithITM(
                     currentCombination = currentCombination,
                     originalParams = params,
-                    newITMId = selectedId
+                    newITMId = selectedId,
+                    currentAlternatorId = externalAlternatorId.takeIf { it != 0 }
                 )
                 
                 Log.d("GeneratorSetModelCard", "🔄 Recalculating with new ITM: $selectedId")

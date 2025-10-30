@@ -10,6 +10,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.google.gson.GsonBuilder
 
 enum class ENVIRONMENT(val endpoint: String) {
     DEVELOPMENT("https://api-cotizador.georgegiosue.dev/"),
@@ -46,7 +47,11 @@ object RetrofitInstance {
         return Retrofit.Builder()
             .baseUrl(endpoint)
             .client(provideOkHttpClient(ctx))
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(
+                GsonBuilder()
+                    .serializeNulls()
+                    .create()
+            ))
             .build()
             .create(ApiService::class.java)
     }

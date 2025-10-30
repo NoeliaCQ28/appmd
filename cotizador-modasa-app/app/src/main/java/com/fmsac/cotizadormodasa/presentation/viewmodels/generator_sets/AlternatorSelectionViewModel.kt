@@ -99,7 +99,8 @@ class AlternatorSelectionViewModel(application: Application) : AndroidViewModel(
     fun recalculatePriceWithAlternator(
         currentCombination: GeneratorSetV2CombinationResponse,
         originalParams: GeneratingSetsParameters,
-        newAlternatorId: Int
+        newAlternatorId: Int,
+        currentItmId: Int?
     ) {
         viewModelScope.launch {
             try {
@@ -113,7 +114,7 @@ class AlternatorSelectionViewModel(application: Application) : AndroidViewModel(
                     currentAlternatorId = currentCombination.alternatorId,
                     currentItmId = currentCombination.itmId,
                     newAlternatorId = newAlternatorId,
-                    newItmId = null
+                    newItmId = currentItmId
                 )
                 
                 result.fold(

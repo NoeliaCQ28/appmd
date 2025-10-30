@@ -100,7 +100,8 @@ class ITMSelectionViewModel(application: Application) : AndroidViewModel(applica
     fun recalculatePriceWithITM(
         currentCombination: GeneratorSetV2CombinationResponse,
         originalParams: GeneratingSetsParameters,
-        newITMId: Int
+        newITMId: Int,
+        currentAlternatorId: Int?
     ) {
         viewModelScope.launch {
             try {
@@ -113,7 +114,7 @@ class ITMSelectionViewModel(application: Application) : AndroidViewModel(applica
                     modelName = currentCombination.modelName,
                     currentAlternatorId = currentCombination.alternatorId,
                     currentItmId = currentCombination.itmId,
-                    newAlternatorId = null,
+                    newAlternatorId = currentAlternatorId,
                     newItmId = newITMId
                 )
                 

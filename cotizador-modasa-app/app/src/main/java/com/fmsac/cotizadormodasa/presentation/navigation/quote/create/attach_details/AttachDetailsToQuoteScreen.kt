@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Text
@@ -57,7 +58,8 @@ fun AttachDetailsToQuoteScreen(
 ) = Screen(
     controller = controller,
     modifier = modifier,
-    route = "Cotizaciones"
+    route = "Cotizaciones",
+    disableScroll = true
 ) { snackbarHostState ->
 
     val configuration = LocalConfiguration.current
@@ -154,209 +156,238 @@ fun AttachDetailsToQuoteScreen(
         )
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(columns),
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Parametros", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-
-        SelectInput(
-            options = availableModels,
-            selectedOption = formParams.getValue("modelo"),
-            onOptionSelected = { formParams.onValueChange("modelo", it) },
-            enabled = availableModels.isNotEmpty(),
-            label = "MODELO"
-        )
-
-        SelectInput(
-            options = availableMotorBrands,
-            selectedOption = formParams.getValue("motorMarca"),
-            onOptionSelected = { formParams.onValueChange("motorMarca", it) },
-            enabled = availableMotorBrands.isNotEmpty(),
-            label = "MARCA DEL MOTOR"
-        )
-
-        SelectInput(
-            options = paramsValues.voltages.map { it.toString() },
-            selectedOption = formParams.getValue("voltage"),
-            onOptionSelected = { formParams.onValueChange("voltage", it) },
-            enabled = paramsValues.voltages.isNotEmpty(),
-            label = "TENSIÓN"
-        )
-
-        SelectInput(
-            options = paramsValues.heightAtSeaLevels.map { it.toString() },
-            selectedOption = formParams.getValue("elevation"),
-            onOptionSelected = { formParams.onValueChange("elevation", it) },
-            enabled = paramsValues.heightAtSeaLevels.isNotEmpty(),
-            label = "ALTURA DE TRABAJO (msnm)"
-        )
-
-        SelectInput(
-            options = paramsValues.temperatures.map { it.toString() },
-            selectedOption = formParams.getValue("temperature"),
-            onOptionSelected = { formParams.onValueChange("temperature", it) },
-            enabled = paramsValues.temperatures.isNotEmpty(),
-            label = "TEMPERATURA (°C)"
-        )
-
-        SelectInput(
-            options = paramsValues.powerFactors.map { it.toString() },
-            selectedOption = formParams.getValue("powerFactor"),
-            onOptionSelected = { formParams.onValueChange("powerFactor", it) },
-            enabled = paramsValues.powerFactors.isNotEmpty(),
-            label = "FACTOR DE POTENCIA"
-        )
-
-        SelectInput(
-            options = paramsValues.frequencies.map { it.toString() },
-            selectedOption = formParams.getValue("frequency"),
-            onOptionSelected = { formParams.onValueChange("frequency", it) },
-            enabled = paramsValues.frequencies.isNotEmpty(),
-            label = "FRECUENCIA (Hz)"
-        )
-
-        SelectInput(
-            options = paramsValues.phases.map { it.toString() },
-            selectedOption = formParams.getValue("fases"),
-            onOptionSelected = { formParams.onValueChange("fases", it) },
-            enabled = paramsValues.phases.isNotEmpty(),
-            label = "FASES"
-        )
-
-        SelectInput(
-            options = cabinOptionsMockup.map { it.key },
-            selectedOption = formParams.getValue("cabin"),
-            onOptionSelected = { formParams.onValueChange("cabin", it) },
-            label = "OPCIONES DE CABINA"
-        )
-
-        PowerInput(
-            label = "P. PRIME",
-            value = formParams.getValue("primePowerValue"),
-            onValueChange = { formParams.onValueChange("primePowerValue", it) },
-            isTodos = formParams.getValue("primePowerTodos") == "true",
-            onTodosChange = { formParams.onValueChange("primePowerTodos", it.toString()) },
-            unit = formParams.getValue("powerUnit"),
-            onUnitChange = { formParams.onValueChange("powerUnit", it) },
-            threshold = formParams.getValue("powerThreshold").toIntOrNull() ?: 20,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        PowerInput(
-            label = "P. STANDBY",
-            value = formParams.getValue("standbyPowerValue"),
-            onValueChange = { formParams.onValueChange("standbyPowerValue", it) },
-            isTodos = formParams.getValue("standbyPowerTodos") == "true",
-            onTodosChange = { formParams.onValueChange("standbyPowerTodos", it.toString()) },
-            unit = formParams.getValue("powerUnit"),
-            onUnitChange = { formParams.onValueChange("powerUnit", it) },
-            threshold = formParams.getValue("powerThreshold").toIntOrNull() ?: 20,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            text = "CONSULTAR COMPONENTES",
-            isLoading = fetchStateModelSearch is FetchState.Loading,
-            onClick = {
-                val primePowerParam = if (formParams.getValue("primePowerTodos") == "true")
-                    "Todos"
-                else
-                    formParams.getValue("primePowerValue")
-
-                val standbyPowerParam = if (formParams.getValue("standbyPowerTodos") == "true")
-                    "Todos"
-                else
-                    formParams.getValue("standbyPowerValue")
-
-                val generatorSetModelParams = GeneratingSetsParameters(
-                    voltage = formParams.getValue("voltage").toInt(),
-                    frequency = formParams.getValue("frequency").toInt(),
-                    phases = formParams.getValue("fases").toInt(),
-                    powerFactor = formParams.getValue("powerFactor").toDouble(),
-                    heightAtSeaLevel = formParams.getValue("elevation").toInt(),
-                    temperature = formParams.getValue("temperature").toInt(),
-                    isSoundproof = cabinOptionsMockup[formParams.getValue("cabin")] == 1,
-                    modelo = formParams.getValue("modelo"),
-                    motorMarca = formParams.getValue("motorMarca"),
-                    primePower = primePowerParam,
-                    standbyPower = standbyPowerParam,
-                    powerThreshold = formParams.getValue("powerThreshold").toIntOrNull() ?: 20,
-                    marketId = 1,
-                    powerUnit = formParams.getValue("powerUnit")
-                )
-
-                generatorSetViewModel.setParams(generatorSetModelParams)
-                generatorSetViewModel.searchModels(generatorSetModelParams)
-            },
-            variant = ButtonVariant.SECONDARY
-        )
-
-        Text("Modelos Disponibles", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-
-        Search(
-            query = searchQuery,
-            onQueryChanged = { searchQuery = it },
-            onSearch = { /* La búsqueda se hace automáticamente al cambiar el texto */ }
-        )
-
-        val cardHeight = 180.dp
-        val spacing = 8.dp
-
-        // Hacer el cálculo reactivo - se recalculará cuando filteredModels o columns cambien
-        val gridHeight = remember(filteredModels, columns) {
-            val rowCount = if (filteredModels.isNotEmpty()) {
-                (filteredModels.size + columns - 1) / columns
-            } else {
-                0
-            }
-            if (rowCount > 0) cardHeight * rowCount + spacing * (rowCount - 1) else 0.dp
+        // HEADER SECTION: Título "Parametros"
+        item(span = { GridItemSpan(columns) }) {
+            Text("Parametros", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(columns),
-            verticalArrangement = Arrangement.spacedBy(spacing),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            userScrollEnabled = false, // Desactivar scroll interno para usar el scroll del Screen padre
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(gridHeight)
-        ) {
-            items(filteredModels, key = { model -> model.id }) { model ->
-                GeneratorSetModelCard(
-                    model = model,
-                    params = params,
-                    controller = controller,
-                    generatorSetViewModel = generatorSetViewModel,
-                    optionalGeneratorSetComponentsViewModel = optionalGeneratorSetComponentsViewModel,
-                    alternatorSelectionViewModel = alternatorSelectionViewModel,
-                    itmSelectionViewModel = itmSelectionViewModel,
-                    onAdd = { modelSelected ->
-                        generatorSetViewModel.addModelSelected(modelSelected)
-                    }
+        // HEADER SECTION: SelectInput - MODELO
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = availableModels,
+                selectedOption = formParams.getValue("modelo"),
+                onOptionSelected = { formParams.onValueChange("modelo", it) },
+                enabled = availableModels.isNotEmpty(),
+                label = "MODELO"
+            )
+        }
+
+        // HEADER SECTION: SelectInput - MARCA DEL MOTOR
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = availableMotorBrands,
+                selectedOption = formParams.getValue("motorMarca"),
+                onOptionSelected = { formParams.onValueChange("motorMarca", it) },
+                enabled = availableMotorBrands.isNotEmpty(),
+                label = "MARCA DEL MOTOR"
+            )
+        }
+
+        // HEADER SECTION: SelectInput - TENSIÓN
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = paramsValues.voltages.map { it.toString() },
+                selectedOption = formParams.getValue("voltage"),
+                onOptionSelected = { formParams.onValueChange("voltage", it) },
+                enabled = paramsValues.voltages.isNotEmpty(),
+                label = "TENSIÓN"
+            )
+        }
+
+        // HEADER SECTION: SelectInput - ALTURA
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = paramsValues.heightAtSeaLevels.map { it.toString() },
+                selectedOption = formParams.getValue("elevation"),
+                onOptionSelected = { formParams.onValueChange("elevation", it) },
+                enabled = paramsValues.heightAtSeaLevels.isNotEmpty(),
+                label = "ALTURA DE TRABAJO (msnm)"
+            )
+        }
+
+        // HEADER SECTION: SelectInput - TEMPERATURA
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = paramsValues.temperatures.map { it.toString() },
+                selectedOption = formParams.getValue("temperature"),
+                onOptionSelected = { formParams.onValueChange("temperature", it) },
+                enabled = paramsValues.temperatures.isNotEmpty(),
+                label = "TEMPERATURA (°C)"
+            )
+        }
+
+        // HEADER SECTION: SelectInput - FACTOR DE POTENCIA
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = paramsValues.powerFactors.map { it.toString() },
+                selectedOption = formParams.getValue("powerFactor"),
+                onOptionSelected = { formParams.onValueChange("powerFactor", it) },
+                enabled = paramsValues.powerFactors.isNotEmpty(),
+                label = "FACTOR DE POTENCIA"
+            )
+        }
+
+        // HEADER SECTION: SelectInput - FRECUENCIA
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = paramsValues.frequencies.map { it.toString() },
+                selectedOption = formParams.getValue("frequency"),
+                onOptionSelected = { formParams.onValueChange("frequency", it) },
+                enabled = paramsValues.frequencies.isNotEmpty(),
+                label = "FRECUENCIA (Hz)"
+            )
+        }
+
+        // HEADER SECTION: SelectInput - FASES
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = paramsValues.phases.map { it.toString() },
+                selectedOption = formParams.getValue("fases"),
+                onOptionSelected = { formParams.onValueChange("fases", it) },
+                enabled = paramsValues.phases.isNotEmpty(),
+                label = "FASES"
+            )
+        }
+
+        // HEADER SECTION: SelectInput - OPCIONES DE CABINA
+        item(span = { GridItemSpan(columns) }) {
+            SelectInput(
+                options = cabinOptionsMockup.map { it.key },
+                selectedOption = formParams.getValue("cabin"),
+                onOptionSelected = { formParams.onValueChange("cabin", it) },
+                label = "OPCIONES DE CABINA"
+            )
+        }
+
+        // HEADER SECTION: PowerInput - P. PRIME
+        item(span = { GridItemSpan(columns) }) {
+            PowerInput(
+                label = "P. PRIME",
+                value = formParams.getValue("primePowerValue"),
+                onValueChange = { formParams.onValueChange("primePowerValue", it) },
+                isTodos = formParams.getValue("primePowerTodos") == "true",
+                onTodosChange = { formParams.onValueChange("primePowerTodos", it.toString()) },
+                unit = formParams.getValue("powerUnit"),
+                onUnitChange = { formParams.onValueChange("powerUnit", it) },
+                threshold = formParams.getValue("powerThreshold").toIntOrNull() ?: 20,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // HEADER SECTION: PowerInput - P. STANDBY
+        item(span = { GridItemSpan(columns) }) {
+            PowerInput(
+                label = "P. STANDBY",
+                value = formParams.getValue("standbyPowerValue"),
+                onValueChange = { formParams.onValueChange("standbyPowerValue", it) },
+                isTodos = formParams.getValue("standbyPowerTodos") == "true",
+                onTodosChange = { formParams.onValueChange("standbyPowerTodos", it.toString()) },
+                unit = formParams.getValue("powerUnit"),
+                onUnitChange = { formParams.onValueChange("powerUnit", it) },
+                threshold = formParams.getValue("powerThreshold").toIntOrNull() ?: 20,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // HEADER SECTION: Button - CONSULTAR COMPONENTES
+        item(span = { GridItemSpan(columns) }) {
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                text = "CONSULTAR COMPONENTES",
+                isLoading = fetchStateModelSearch is FetchState.Loading,
+                onClick = {
+                    val primePowerParam = if (formParams.getValue("primePowerTodos") == "true")
+                        "Todos"
+                    else
+                        formParams.getValue("primePowerValue")
+
+                    val standbyPowerParam = if (formParams.getValue("standbyPowerTodos") == "true")
+                        "Todos"
+                    else
+                        formParams.getValue("standbyPowerValue")
+
+                    val generatorSetModelParams = GeneratingSetsParameters(
+                        voltage = formParams.getValue("voltage").toInt(),
+                        frequency = formParams.getValue("frequency").toInt(),
+                        phases = formParams.getValue("fases").toInt(),
+                        powerFactor = formParams.getValue("powerFactor").toDouble(),
+                        heightAtSeaLevel = formParams.getValue("elevation").toInt(),
+                        temperature = formParams.getValue("temperature").toInt(),
+                        isSoundproof = cabinOptionsMockup[formParams.getValue("cabin")] == 1,
+                        modelo = formParams.getValue("modelo"),
+                        motorMarca = formParams.getValue("motorMarca"),
+                        primePower = primePowerParam,
+                        standbyPower = standbyPowerParam,
+                        powerThreshold = formParams.getValue("powerThreshold").toIntOrNull() ?: 20,
+                        marketId = 1,
+                        powerUnit = formParams.getValue("powerUnit")
+                    )
+
+                    generatorSetViewModel.setParams(generatorSetModelParams)
+                    generatorSetViewModel.searchModels(generatorSetModelParams)
+                },
+                variant = ButtonVariant.SECONDARY
+            )
+        }
+
+        // SEARCH SECTION: Título + Search bar
+        item(span = { GridItemSpan(columns) }) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text("Modelos Disponibles", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+
+                Search(
+                    query = searchQuery,
+                    onQueryChanged = { searchQuery = it },
+                    onSearch = { /* La búsqueda se hace automáticamente al cambiar el texto */ }
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Button(
-                onClick = { controller.popBackStack() },
-                modifier = Modifier.weight(1f),
-                text = "GUARDAR"
+        // GRID ITEMS SECTION: Generator Set Model Cards (LAZY VIRTUALIZATION ENABLED!)
+        items(filteredModels, key = { model -> model.id }) { model ->
+            GeneratorSetModelCard(
+                model = model,
+                params = params,
+                controller = controller,
+                generatorSetViewModel = generatorSetViewModel,
+                optionalGeneratorSetComponentsViewModel = optionalGeneratorSetComponentsViewModel,
+                alternatorSelectionViewModel = alternatorSelectionViewModel,
+                itmSelectionViewModel = itmSelectionViewModel,
+                onAdd = { modelSelected ->
+                    generatorSetViewModel.addModelSelected(modelSelected)
+                }
             )
+        }
 
-            Spacer(modifier = Modifier.width(16.dp))
+        // FOOTER SECTION: Botones GUARDAR / CANCELAR
+        item(span = { GridItemSpan(columns) }) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = { controller.popBackStack() },
+                    modifier = Modifier.weight(1f),
+                    text = "GUARDAR"
+                )
 
-            Button(
-                onClick = { controller.popBackStack() },
-                modifier = Modifier.weight(1f),
-                text = "CANCELAR",
-                variant = ButtonVariant.DESTRUCTIVE
-            )
+                Button(
+                    onClick = { controller.popBackStack() },
+                    modifier = Modifier.weight(1f),
+                    text = "CANCELAR",
+                    variant = ButtonVariant.DESTRUCTIVE
+                )
+            }
         }
     }
 }

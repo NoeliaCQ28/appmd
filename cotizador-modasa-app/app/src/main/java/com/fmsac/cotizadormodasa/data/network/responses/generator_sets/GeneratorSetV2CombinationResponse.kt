@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class GeneratorSetV2CombinationResponse(
     @SerializedName("IntegradoraId")
-    val integradoraId: Int,
+    val integradoraId: Int?,
 
     @SerializedName("sIntKey")
     val intKey: String,
@@ -28,10 +28,10 @@ data class GeneratorSetV2CombinationResponse(
     val alternatorBrand: String,
 
     @SerializedName("Alternador_Id")
-    val alternatorId: Int,
+    val alternatorId: Int?,
 
     @SerializedName("nIntITMA")
-    val itmId: Int,
+    val itmId: Int?,
 
     @SerializedName("sKitItm")
     val itmKitName: String?,
@@ -44,26 +44,26 @@ data class GeneratorSetV2CombinationResponse(
     val nITMPrecioUSD: String? = null,
 
     @SerializedName("nIntPrecioGEAbierto")
-    val priceOpen: Double,
+    val priceOpen: Double?,
 
     @SerializedName("nIntPrecioGECabina")
-    val priceCabin: Double,
+    val priceCabin: Double?,
 
     @SerializedName("nIntPrecioTotalUSD")
-    val totalPriceUSD: Double,
+    val totalPriceUSD: Double?,
 
     @SerializedName("PrimeKW")
-    val primeKW: Double,
+    val primeKW: Double?,
 
     @SerializedName("PrimeKVA")
-    val primeKVA: Double,
+    val primeKVA: Double?,
 
     @SerializedName("StandByKW")
-    val standbyKW: Double,
+    val standbyKW: Double?,
 
     @SerializedName("StandByKVA")
-    val standbyKVA: Double,
+    val standbyKVA: Double?,
 
     @SerializedName("nIntInsonoro")
-    val isSoundproof: Boolean
+    val isSoundproof: Boolean?
 )

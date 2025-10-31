@@ -109,29 +109,29 @@ class AlternatorSelectionViewModel(application: Application) : AndroidViewModel(
 
                 val result = repository.simulateAlternatorSwap(
                     originalParams = originalParams,
-                    integradoraId = currentCombination.integradoraId,
+                    integradoraId = currentCombination.integradoraId ?: 0,
                     modelName = currentCombination.modelName,
-                    currentAlternatorId = currentCombination.alternatorId,
-                    currentItmId = currentCombination.itmId,
+                    currentAlternatorId = currentCombination.alternatorId ?: 0,
+                    currentItmId = currentCombination.itmId ?: 0,
                     newAlternatorId = newAlternatorId,
                     newItmId = currentItmId
                 )
-                
+
                 result.fold(
                     onSuccess = { updatedCombination ->
                         // Llamar al callback con la combinación actualizada
                         onPriceRecalculatedCallback?.invoke(updatedCombination)
-                        
+
                         // Notificar al GeneratorSetViewModel de la actualización
                         sharedGeneratorSetViewModel?.updateCombinationInLocalList(
                             com.fmsac.cotizadormodasa.core.generator_sets.UpdatedCombinationResult(
-                                originalIntegradoraId = currentCombination.integradoraId,
+                                originalIntegradoraId = currentCombination.integradoraId ?: 0,
                                 updatedCombination = updatedCombination,
                                 componentChanged = "alternator",
-                                oldAlternatorId = currentCombination.alternatorId,
-                                oldItmId = currentCombination.itmId,
+                                oldAlternatorId = currentCombination.alternatorId ?: 0,
+                                oldItmId = currentCombination.itmId ?: 0,
                                 newAlternatorId = newAlternatorId,
-                                newItmId = currentCombination.itmId
+                                newItmId = currentCombination.itmId ?: 0
                             )
                         )
                         

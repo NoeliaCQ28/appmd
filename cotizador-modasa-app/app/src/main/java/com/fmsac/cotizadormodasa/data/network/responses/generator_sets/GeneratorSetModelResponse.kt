@@ -4,16 +4,16 @@ import com.google.gson.annotations.SerializedName
 
 data class GeneratorSetModelResponse(
     @SerializedName("ModeloGE_Id")
-    val id: Int,
+    val id: Int?,
 
     @SerializedName("Modelo")
     val name: String,
 
     @SerializedName("motor")
-    val motor: GeneratorSetMotorResponse,
+    val motor: GeneratorSetMotorResponse?,
 
     @SerializedName("alternadores")
-    val alternators: List<GeneratorSetAlternatorResponse>,
+    val alternators: List<GeneratorSetAlternatorResponse>?,
 
     @SerializedName("Integradora_Id")
     val integradoraId: Int? = null
@@ -22,7 +22,7 @@ data class GeneratorSetModelResponse(
 
 data class GeneratorSetMotorResponse(
     @SerializedName("Motor_Id")
-    val id: Int,
+    val id: Int?,
 
     @SerializedName("Motor")
     val name: String
@@ -30,40 +30,40 @@ data class GeneratorSetMotorResponse(
 
 data class GeneratorSetAlternatorResponse(
     @SerializedName("Alternador_Id")
-    val id: Int,
+    val id: Int?,
 
     @SerializedName("Alternador")
     val name: String,
 
     @SerializedName("price")
-    val modelPrice: Double,
+    val modelPrice: Double?,
 
     @SerializedName("derate")
-    val modelDerate: GeneratorSetDerateModelResponse,
+    val modelDerate: GeneratorSetDerateModelResponse?,
 
     @SerializedName("itms")
-    val itms: List<GeneratorSetItmResponse>
+    val itms: List<GeneratorSetItmResponse>?
 )
 
 data class GeneratorSetDerateModelResponse(
     @SerializedName("prime")
-    val prime: GeneratorSetPowerResponse,
+    val prime: GeneratorSetPowerResponse?,
 
     @SerializedName("standby")
-    val standby: GeneratorSetPowerResponse
+    val standby: GeneratorSetPowerResponse?
 )
 
 data class GeneratorSetPowerResponse(
     @SerializedName("kw")
-    val kw: Double,
+    val kw: Double?,
 
     @SerializedName("kva")
-    val kva: Double
+    val kva: Double?
 )
 
 data class GeneratorSetItmResponse(
     @SerializedName("Itm_Id")
-    val id: Int,
+    val id: Int?,
 
     @SerializedName("KITITM")
     val kitName: String?

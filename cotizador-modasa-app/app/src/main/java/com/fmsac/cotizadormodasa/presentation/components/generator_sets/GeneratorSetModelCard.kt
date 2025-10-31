@@ -739,20 +739,20 @@ fun GeneratorSetModelCard(
                 setAlternatorNameSelected("")
 
                 // Asignar el precio total de la combinación
-                externalCombinationPrice = combination.totalPriceUSD
+                externalCombinationPrice = combination.totalPriceUSD ?: 0.0
 
                 // Actualizar IDs y nombres de AMBOS componentes
-                externalAlternatorId = combination.alternatorId
+                externalAlternatorId = combination.alternatorId ?: 0
                 externalAlternatorName = combination.alternatorModel
 
-                externalITMId = combination.itmId
-                externalITMName = combination.itmKitName ?: "ITM ${combination.itmId}"
+                externalITMId = combination.itmId ?: 0
+                externalITMName = combination.itmKitName ?: "ITM ${combination.itmId ?: 0}"
 
                 // Actualizar potencias Prime y Standby desde la respuesta de la API
-                externalPrimeKW = combination.primeKW
-                externalPrimeKVA = combination.primeKVA
-                externalStandbyKW = combination.standbyKW
-                externalStandbyKVA = combination.standbyKVA
+                externalPrimeKW = combination.primeKW ?: 0.0
+                externalPrimeKVA = combination.primeKVA ?: 0.0
+                externalStandbyKW = combination.standbyKW ?: 0.0
+                externalStandbyKVA = combination.standbyKVA ?: 0.0
 
                 Log.d("GeneratorSetModelCard", "💰 Updated prices - Total USD: ${combination.totalPriceUSD}")
                 Log.d("GeneratorSetModelCard", "💰 basePrice: $basePrice, externalCombinationPrice: $externalCombinationPrice")

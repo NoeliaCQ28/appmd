@@ -21,48 +21,51 @@ import android.util.Log
 class GeneratorSetModelMapper : Mapper {
     fun fromDTO(dto: GeneratorSetModelResponse): GeneratorSetModel {
         return GeneratorSetModel(
-            id = dto.id,
+            id = dto.id ?: 0,
             name = dto.name,
-            motor = fromDTOGeneratorSetMotor(dto.motor),
-            alternators = dto.alternators.map { fromDTOGeneratorSetAlternator(it) },
+            motor = dto.motor?.let { fromDTOGeneratorSetMotor(it) } ?: GeneratorSetMotor(id = 0, name = "Motor desconocido"),
+            alternators = dto.alternators?.mapNotNull { fromDTOGeneratorSetAlternator(it) } ?: emptyList(),
             integradoraId = dto.integradoraId ?: 0
         )
     }
 
     private fun fromDTOGeneratorSetMotor(dto: GeneratorSetMotorResponse): GeneratorSetMotor {
         return GeneratorSetMotor(
-            id = dto.id,
+            id = dto.id ?: 0,
             name = dto.name,
         )
     }
 
     private fun fromDTOGeneratorSetAlternator(dto: GeneratorSetAlternatorResponse): GeneratorSetAlternator {
         return GeneratorSetAlternator(
-            id = dto.id,
+            id = dto.id ?: 0,
             name = dto.name,
-            modelPrice = dto.modelPrice,
-            modelDerate = fromDTOGeneratorSetDerateModel(dto.modelDerate),
-            itms = dto.itms.map { fromDTOGeneratorSetItm(it) }
+            modelPrice = dto.modelPrice ?: 0.0,
+            modelDerate = dto.modelDerate?.let { fromDTOGeneratorSetDerateModel(it) } ?: GeneratorSetDerateModel(
+                prime = GeneratorSetPower(kw = 0.0, kva = 0.0),
+                standby = GeneratorSetPower(kw = 0.0, kva = 0.0)
+            ),
+            itms = dto.itms?.mapNotNull { fromDTOGeneratorSetItm(it) } ?: emptyList()
         )
     }
 
     private fun fromDTOGeneratorSetDerateModel(dto: GeneratorSetDerateModelResponse): GeneratorSetDerateModel {
         return GeneratorSetDerateModel(
-            prime = fromDTOGeneratorSetPower(dto.prime),
-            standby = fromDTOGeneratorSetPower(dto.standby)
+            prime = dto.prime?.let { fromDTOGeneratorSetPower(it) } ?: GeneratorSetPower(kw = 0.0, kva = 0.0),
+            standby = dto.standby?.let { fromDTOGeneratorSetPower(it) } ?: GeneratorSetPower(kw = 0.0, kva = 0.0)
         )
     }
 
     private fun fromDTOGeneratorSetPower(dto: GeneratorSetPowerResponse): GeneratorSetPower {
         return GeneratorSetPower(
-            kw = dto.kw,
-            kva = dto.kva
+            kw = dto.kw ?: 0.0,
+            kva = dto.kva ?: 0.0
         )
     }
 
     private fun fromDTOGeneratorSetItm(dto: GeneratorSetItmResponse): GeneratorSetItm {
         return GeneratorSetItm(
-            id = dto.id,
+            id = dto.id ?: 0,
             kitName = dto.kitName ?: "Sin ITM"
         )
     }
@@ -138,14 +141,14 @@ class GeneratorSetModelMapper : Mapper {
         // Create a single GeneratorSetModel per group with all alternators
         return listOf(
             GeneratorSetModel(
-                id = firstCombination.integradoraId,
+                id = firstCombination.integradoraId ?: 0,
                 name = group.modelName,
                 motor = GeneratorSetMotor(
                     id = 0, // Motor ID not provided in v2 API
                     name = group.motorModel
                 ),
                 alternators = alternators,
-                integradoraId = firstCombination.integradoraId
+                integradoraId = firstCombination.integradoraId ?: 0
             )
         )
     }
@@ -155,22 +158,22 @@ class GeneratorSetModelMapper : Mapper {
      */
     private fun fromV2CombinationToAlternator(combination: GeneratorSetV2CombinationResponse): GeneratorSetAlternator {
         return GeneratorSetAlternator(
-            id = combination.alternatorId,
+            id = combination.alternatorId ?: 0,
             name = combination.alternatorModel,
-            modelPrice = combination.totalPriceUSD,
+            modelPrice = combination.totalPriceUSD ?: 0.0,
             modelDerate = GeneratorSetDerateModel(
                 prime = GeneratorSetPower(
-                    kw = combination.primeKW,
-                    kva = combination.primeKVA
+                    kw = combination.primeKW ?: 0.0,
+                    kva = combination.primeKVA ?: 0.0
                 ),
                 standby = GeneratorSetPower(
-                    kw = combination.standbyKW,
-                    kva = combination.standbyKVA
+                    kw = combination.standbyKW ?: 0.0,
+                    kva = combination.standbyKVA ?: 0.0
                 )
             ),
             itms = listOf(
                 GeneratorSetItm(
-                    id = combination.itmId,
+                    id = combination.itmId ?: 0,
                     kitName = combination.itmKitName ?: "Sin ITM"
                 )
             )

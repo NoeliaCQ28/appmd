@@ -85,6 +85,7 @@ fun Screen(
     route: String,
     controller: NavHostController,
     onRefresh: () -> Unit = {},
+    disableScroll: Boolean = false,
     content: @Composable (SnackbarHostState) -> Unit,
 ) {
 
@@ -361,7 +362,10 @@ fun Screen(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .then(
+                        if (disableScroll) Modifier
+                        else Modifier.verticalScroll(rememberScrollState())
+                    ),
                 state = pullToRefreshState
             ) {
                 Column() {
